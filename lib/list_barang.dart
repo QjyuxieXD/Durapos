@@ -258,6 +258,98 @@
 //   }
 // }
 
+// import 'package:flutter/material.dart';
+// import 'package:cloud_firestore/cloud_firestore.dart';
+// import 'form.dart';
+
+// class ListBarangWidget extends StatefulWidget {
+//   @override
+//   _ListBarangWidgetState createState() => _ListBarangWidgetState();
+// }
+
+// class _ListBarangWidgetState extends State<ListBarangWidget> {
+//   Future<List<DocumentSnapshot>> getData() async {
+//     QuerySnapshot querySnapshot = await FirebaseFirestore.instance.collection('produk').get();
+//     return querySnapshot.docs;
+//   }
+
+//   Widget buildListItem(String name, String stock, String hargaBeli, String hargaJual) {
+//     return Container(
+//       margin: EdgeInsets.all(8.0),
+//       padding: EdgeInsets.all(8.0),
+//       decoration: BoxDecoration(
+//         color: Color(0xFFc42e1d),
+//         borderRadius: BorderRadius.circular(8.0),
+//       ),
+//       child: Column(
+//         crossAxisAlignment: CrossAxisAlignment.start,
+//         children: [
+//           Text(
+//             'Name: $name',
+//             style: TextStyle(color: Colors.white),
+//           ),
+//           Text(
+//             'Stock: $stock',
+//             style: TextStyle(color: Colors.white),
+//           ),
+//           Text(
+//             'Harga Beli: $hargaBeli',
+//             style: TextStyle(color: Colors.white),
+//           ),
+//           Text(
+//             'Harga Jual: $hargaJual',
+//             style: TextStyle(color: Colors.white),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: Text('List Barang'),
+//         backgroundColor: Color(0xFFc42e1d),
+//       ),
+//       body: FutureBuilder(
+//         future: getData(),
+//         builder: (context, AsyncSnapshot<List<DocumentSnapshot>> snapshot) {
+//           if (snapshot.connectionState == ConnectionState.waiting) {
+//             return CircularProgressIndicator(); // Loading indicator while data is being fetched
+//           } else if (snapshot.hasError) {
+//             return Text('Error: ${snapshot.error}');
+//           } else {
+//             List<DocumentSnapshot> data = snapshot.data;
+//             return ListView.builder(
+//               itemCount: data.length,
+//               itemBuilder: (context, index) {
+//                 Map<String, dynamic> productData = data[index].data() as Map<String, dynamic>;
+//                 return buildListItem(
+//                   productData['nama_produk'],
+//                   productData['stok'],
+//                   productData['harga_beli'],
+//                   productData['harga_jual'],
+//                 );
+//               },
+//             );
+//           }
+//         },
+//       ),
+//       floatingActionButton: FloatingActionButton(
+//         onPressed: () async {
+//           await Navigator.push(
+//             context,
+//             MaterialPageRoute(builder: (context) => FormPage()),
+//           );
+//         },
+//         child: Icon(Icons.add),
+//         backgroundColor: Colors.red,
+//       ),
+//     );
+//   }
+// }
+
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'form.dart';
@@ -273,7 +365,14 @@ class _ListBarangWidgetState extends State<ListBarangWidget> {
     return querySnapshot.docs;
   }
 
-  Widget buildListItem(String name, String stock, String hargaBeli, String hargaJual) {
+  Widget buildListItem(String name, String stock, String hargaBeli, String hargaJual, String diskon, Timestamp masaBerlakuDiskon) {
+    String formattedExpiryDate = 'Tidak Ada Masa Berlaku Diskon'; // Default jika tidak ada masa berlaku diskon
+
+    if (masaBerlakuDiskon != null) {
+      DateTime expiryDate = masaBerlakuDiskon.toDate();
+      formattedExpiryDate = expiryDate.toString().substring(0,10); // Mengambil bagian tanggal dari Timestamp
+    }
+
     return Container(
       margin: EdgeInsets.all(8.0),
       padding: EdgeInsets.all(8.0),
@@ -300,6 +399,14 @@ class _ListBarangWidgetState extends State<ListBarangWidget> {
             'Harga Jual: $hargaJual',
             style: TextStyle(color: Colors.white),
           ),
+          Text(
+            'Diskon: $diskon%',
+            style: TextStyle(color: Colors.white),
+          ),
+          Text(
+            'Masa Berlaku Diskon: $formattedExpiryDate',
+            style: TextStyle(color: Colors.white),
+          ),
         ],
       ),
     );
@@ -316,7 +423,9 @@ class _ListBarangWidgetState extends State<ListBarangWidget> {
         future: getData(),
         builder: (context, AsyncSnapshot<List<DocumentSnapshot>> snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return CircularProgressIndicator(); // Loading indicator while data is being fetched
+            return Center(
+              child: CircularProgressIndicator(), // Loading indicator while data is being fetched
+            );
           } else if (snapshot.hasError) {
             return Text('Error: ${snapshot.error}');
           } else {
@@ -325,11 +434,16 @@ class _ListBarangWidgetState extends State<ListBarangWidget> {
               itemCount: data.length,
               itemBuilder: (context, index) {
                 Map<String, dynamic> productData = data[index].data() as Map<String, dynamic>;
+                String diskon = productData['diskon'].toString();
+                Timestamp masaBerlakuDiskon = productData['masa_berlaku_diskon'];
+
                 return buildListItem(
                   productData['nama_produk'],
                   productData['stok'],
                   productData['harga_beli'],
                   productData['harga_jual'],
+                  diskon,
+                  masaBerlakuDiskon,
                 );
               },
             );
@@ -344,7 +458,14 @@ class _ListBarangWidgetState extends State<ListBarangWidget> {
           );
         },
         child: Icon(Icons.add),
+        backgroundColor: Colors.red,
       ),
     );
   }
+}
+
+void main() {
+  runApp(MaterialApp(
+    home: ListBarangWidget(),
+  ));
 }

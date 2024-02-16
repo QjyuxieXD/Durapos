@@ -2,11 +2,13 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'home_roma.dart';
 import 'login_screen.dart';
+import 'informasi_toko.dart';
 
 class DrawerWidget extends StatelessWidget {
   final User user;
 
   DrawerWidget({this.user, String displayName});
+  FirebaseAuth _auth = FirebaseAuth.instance;
 
   @override
   Widget build(BuildContext context) {
@@ -28,14 +30,36 @@ class DrawerWidget extends StatelessWidget {
                       fit: BoxFit.cover,
                     ),
                   ),
-                  accountName: Text('Selamat Datang, ${user?.displayName ?? 'Guest'}!'),
-                  accountEmail: Text('@${user?.displayName ?? 'Guest'}'),
+                  accountName: Text('Selamat Datang, ${_auth.currentUser?.displayName ?? "Pengguna"}'),
+                  // accountEmail: Text('@${user?.displayName ?? 'Guest'}'),
+                  accountEmail: Text(_auth.currentUser?.email ?? "",),
                 ),
                 // ... rest of the drawer items
+                ListTile(
+          leading: Icon(Icons.settings),
+          title: Text('Informasi toko'),
+          onTap: () {
+            // Navigate to InformasiTokoScreen when the ListTile is tapped
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => InformasiToko()),
+            );
+          },
+        ),
+                Divider(height: 15, thickness: 1),
+                Padding(
+                  padding: const EdgeInsets.only(left: 20.0, top: 10, bottom: 10),
+                  child: Text("Lainnya",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Colors.black54,
+                      )),
+                ),
                 ListTile(
                   leading: Icon(Icons.settings),
                   title: Text('Informasi toko'),
                 ),
+
                 ListTile(
                   leading: Icon(Icons.exit_to_app),
                   title: Text('Log Out'),
